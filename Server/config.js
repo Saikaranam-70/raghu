@@ -1,17 +1,11 @@
 // src/config.js
-// Loads and validates all environment variables at startup.
-// If anything is missing, the server refuses to start.
-
 require("dotenv").config();
-const path = require("path");
-const fs = require("fs");
 
 function required(key) {
   const val = process.env[key];
   if (!val || val.trim() === "") {
     throw new Error(
-      `❌  Missing required environment variable: ${key}\n` +
-        `    Copy .env.example → .env and fill in all values.`
+      `❌ Missing required environment variable: ${key}`
     );
   }
   return val.trim();
@@ -21,31 +15,28 @@ function optional(key, defaultVal) {
   return process.env[key]?.trim() || defaultVal;
 }
 
-// ── Validate service account file exists ────────────────
-const serviceAccountFile = required("GOOGLE_SERVICE_ACCOUNT_FILE");
-const absoluteServiceAccountPath = path.resolve(process.cwd(), serviceAccountFile);
-if (!fs.existsSync(absoluteServiceAccountPath)) {
-  throw new Error(
-    `❌  Service account JSON not found at: ${absoluteServiceAccountPath}\n` +
-      `    Download it from Google Cloud Console and place it there.`
-  );
+// Google credentials from ENV
+const serviceAccountJson = required("GOOGLE_SERVICE_ACCOUNT_JSON");
+
+let googleCredentials;
+
+try {
+  googleCredentials = JSON.parse(serviceAccountJson);
+} catch {
+  throw new Error("❌ GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON.");
 }
 
-// ── Parse API keys ───────────────────────────────────────
+// API Keys
 const rawApiKeys = required("API_KEYS");
-const apiKeys = rawApiKeys
-  .split(",")
-  .map((k) => k.trim())
-  .filter(Boolean);
+const apiKeys = rawApiKeys.split(",").map((k) => k.trim()).filter(Boolean);
 
 if (apiKeys.length === 0) {
-  throw new Error("❌  API_KEYS must contain at least one key.");
+  throw new Error("❌ API_KEYS must contain at least one key.");
 }
 
-// ── Export validated config ──────────────────────────────
 const config = {
   // Google
-  googleServiceAccountFile: absoluteServiceAccountPath,
+  googleCredentials,
   spreadsheetId: required("SPREADSHEET_ID"),
   sheetName: optional("SHEET_NAME", "Sheet1"),
 

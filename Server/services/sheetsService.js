@@ -444,7 +444,7 @@ class SheetsService {
     if (this._sheetsApi) return this._sheetsApi;
     try {
       const auth = new google.auth.GoogleAuth({
-        keyFile: config.googleServiceAccountFile,
+credentials: config.googleCredentials,
         scopes:  ["https://www.googleapis.com/auth/spreadsheets.readonly"],
       });
       this._sheetsApi = google.sheets({ version: "v4", auth });
