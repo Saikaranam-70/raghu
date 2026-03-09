@@ -4,6 +4,9 @@ import LoginPage    from './pages/LoginPage'
 import LoadingPage  from './pages/LoadingPage'
 import ErrorPage    from './pages/ErrorPage'
 import DashboardPage from './pages/DashboardPage'
+import { useEffect } from 'react'
+
+
 
 export default function App() {
   const {
@@ -11,6 +14,15 @@ export default function App() {
     student, rank, error, pin,
     fetchStudent, reset,
   } = useStudent()
+
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search)
+  const pin = params.get("pin")
+
+  if (pin) {
+    fetchStudent(pin)
+  }
+}, [])
 
   console.log("Student",student);
 

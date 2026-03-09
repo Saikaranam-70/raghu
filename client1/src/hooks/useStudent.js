@@ -77,6 +77,8 @@ export function useStudent() {
     setRank(null)
     setPin(rollNo)
 
+    window.history.replaceState(null, "", `?pin=${rollNo}`)
+
     // Fetch student info, rank, and subject breakdown in parallel
     const [studentRes, rankRes, subjectsRes] = await Promise.allSettled([
       api.getStudent(rollNo),
@@ -97,14 +99,18 @@ export function useStudent() {
     setStatus(STATUS.SUCCESS)
   }, [])
 
-  const reset = useCallback(() => {
-    setStatus(STATUS.IDLE)
-    setStudent(null)
-    setSubjects(null)
-    setRank(null)
-    setError(null)
-    setPin('')
-  }, [])
+const reset = useCallback(() => {
+  setStatus(STATUS.IDLE)
+  setStudent(null)
+  setSubjects(null)
+  setRank(null)
+  setError(null)
+  setPin('')
+
+  // ✅ clear URL
+  window.history.replaceState(null, "", "/")
+
+}, [])
 
   return {
     status, student, subjects, rank, error, pin,
