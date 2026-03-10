@@ -2,7 +2,7 @@ import { useState } from "react";
 import '../../pages/Login.css'
 
 // ── REPLACE THESE WITH YOUR ACTUAL ENDPOINTS ──────────────────────────────────
-const BASE_URL   = "http://localhost:3000";
+const BASE_URL   = import.meta.env.VITE_API_URL;
 const LOGIN_PATH = "/admin/login";        // POST → { token: "..." }
 // ─────────────────────────────────────────────────────────────────────────────
 

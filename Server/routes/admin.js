@@ -66,11 +66,11 @@ router.post("/login", async(req, res) => {
     }
 })
 
-router.post("/update", middleware, async (req, res) => {
+router.post("/update", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const admin = req.admin;
+    const admin = await Admin.findOne();
     console.log("called");
 
     if (username) admin.username = username;
