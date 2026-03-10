@@ -4,8 +4,13 @@
 const createApp = require("./app");
 const config = require("./config");
 const logger = require("./logger");
+const mongoose = require("mongoose");
 
 const app = createApp();
+
+mongoose.connect(process.env.MONGO_URI).then(()=>{
+  console.log("MongoDB Connected Successfully")
+}).catch((err)=>console.log("Mongo Error :", err))
 
 const server = app.listen(config.port, () => {
   logger.info(`🚀  Student Attendance API running on http://localhost:${config.port}`);

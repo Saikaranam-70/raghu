@@ -1,5 +1,7 @@
 // src/pages/LoginPage.jsx
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import './Login.css'
 
 const CAMPUSES = [
   { id: 'rec', label: 'REC — Raghu Engineering College' },
@@ -7,6 +9,7 @@ const CAMPUSES = [
 ]
 
 export default function LoginPage({ onLogin }) {
+  const navigate = useNavigate()
   const [campus, setCampus]   = useState('rec')
   const [roll, setRoll]       = useState('')
   const [error, setError]     = useState('')
@@ -31,6 +34,14 @@ export default function LoginPage({ onLogin }) {
 
   return (
     <div className="login-wrap">
+      <div className="admin-btn-wrap">
+  <button 
+    className="admin-btn"
+    onClick={() => navigate("/admin")}
+  >
+    <i className="bi bi-person-lock"></i> Admin
+  </button>
+</div>
       <div className="login-card">
 
         {/* Logo */}

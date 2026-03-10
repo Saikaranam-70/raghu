@@ -16,6 +16,8 @@ const {
   errorHandler,
 } = require("./middleware/security");
 const studentRoutes = require("./routes/students");
+const { admin } = require("googleapis/build/src/apis/admin");
+const adminRoutes = require("./routes/admin")
 
 function createApp() {
   const app = express();
@@ -77,6 +79,7 @@ function createApp() {
   // ── Protected student routes ─────────────────────────────
   // All /students/* routes require a valid API key
   app.use("/students", requireApiKey, studentRoutes);
+  app.use("/admin", adminRoutes)
 
   // ── 404 + error handlers ─────────────────────────────────
   app.use(notFound);

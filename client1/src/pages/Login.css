@@ -1,0 +1,23 @@
+
+.admin-btn-wrap{
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.admin-btn{
+  background: #111;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.admin-btn:hover{
+  background: #333;
+}
