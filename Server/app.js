@@ -5,6 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const config = require("./config");
 const logger = require("./logger");
+
 const {
   requestId,
   securityHeaders,
@@ -23,6 +24,7 @@ function createApp() {
   const app = express();
 
   // ── Body parsing ─────────────────────────────────────────
+
   app.use(express.json({ limit: "10kb" }));   // limit body size
 
   // ── Security middleware (order matters) ──────────────────
@@ -38,8 +40,8 @@ function createApp() {
       origin: config.isProduction
         ? (process.env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim())
         : "*",
-      methods: ["GET"],
-      allowedHeaders: ["X-API-Key", "Content-Type"],
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      allowedHeaders: ["X-API-Key", "Content-Type", "Authorization"],
     })
   );
 

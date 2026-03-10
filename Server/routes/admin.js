@@ -1,7 +1,8 @@
 const Admin = require("../model/Admin")
 const jwt = require("jsonwebtoken");
 const express = require("express");
-const bcrypt = require("bcryptjs")
+const bcrypt = require("bcryptjs");
+const middleware = require("../middleware/middleware");
 
 const router = express.Router();
 
@@ -49,7 +50,7 @@ router.post("/login", async(req, res) => {
         }
 
         const token = jwt.sign(
-            {username: admin.username},
+            {id: admin._id},
             process.env.SECRET,
             {expiresIn: "1h"}
         );
@@ -64,5 +65,29 @@ router.post("/login", async(req, res) => {
         return res.status(500).json({message: "Internal Server Error"});
     }
 })
+
+router.post("/update", middleware, async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    const admin = req.admin;
+    console.log("called");
+
+    if (username) admin.username = username;
+    
+
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      admin.password = await bcrypt.hash(password, salt);
+    }
+
+    await admin.save();
+
+    res.json({ message: "Admin updated successfully" });
+
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 module.exports = router
