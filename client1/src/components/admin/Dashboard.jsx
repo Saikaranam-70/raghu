@@ -25,7 +25,7 @@ const api = (path) =>
 
 // ── THRESHOLDS ──────────────────────────────────────────────────────────────
 const T_GOOD     = 75;   // ≥ 75% → Good
-const T_CRITICAL = 50;   // < 40% → Critical  (40–74% → Warning)
+const T_CRITICAL = 40;   // < 40% → Critical  (40–74% → Warning)
 // ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -140,6 +140,7 @@ function BottomNav({ activeTab, setActiveTab }) {
     { id: "overview",   label: "Overview",   icon: "📊" },
     { id: "subjects",   label: "Subjects",   icon: "📚" },
     { id: "defaulters", label: "Defaulters", icon: "⚠️" },
+    { id: "settings",   label: "Settings",   icon: "⚙️" },
   ];
   return (
     <div style={{
@@ -171,6 +172,161 @@ function BottomNav({ activeTab, setActiveTab }) {
   );
 }
 
+
+// ── CHANGE CREDENTIALS MODAL ──────────────────────────────────────────────────
+function CredField({ label, type = "text", value, onChange, placeholder, show, onToggle }) {
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#334155", marginBottom: 6 }}>
+        {label}
+      </label>
+      <div style={{ position: "relative" }}>
+        <input
+          type={show !== undefined ? (show ? "text" : "password") : type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          style={{
+            width: "100%", padding: "11px 40px 11px 14px",
+            border: "1.5px solid #e2e8f0", borderRadius: 10,
+            fontSize: 14, color: "#0f172a", background: "#f8fafc",
+            outline: "none", fontFamily: "inherit",
+            transition: "border-color .2s, box-shadow .2s",
+          }}
+          onFocus={e => { e.target.style.borderColor = "#4f46e5"; e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,.1)"; e.target.style.background = "#fff"; }}
+          onBlur={e  => { e.target.style.borderColor = "#e2e8f0"; e.target.style.boxShadow = "none"; e.target.style.background = "#f8fafc"; }}
+        />
+        {onToggle && (
+          <button type="button" onClick={onToggle} style={{
+            position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+            background: "none", border: "none", fontSize: 16, cursor: "pointer",
+            color: "#94a3b8", padding: 0, lineHeight: 1,
+          }}>
+            {show ? "🙈" : "👁"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ChangeCredentials({ token, onClose }) {
+  const [username,    setUsername]    = useState("");
+  const [password,    setPassword]    = useState("");
+  const [confirmPw,   setConfirmPw]   = useState("");
+  const [showPw,      setShowPw]      = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState("");
+  const [success,     setSuccess]     = useState(false);
+
+  const validate = () => {
+    if (!username.trim())           return "Username is required.";
+    if (username.trim().length < 3) return "Username must be at least 3 characters.";
+    if (!password)                  return "Password is required.";
+    if (password.length < 6)        return "Password must be at least 6 characters.";
+    if (password !== confirmPw)     return "Passwords do not match.";
+    return null;
+  };
+
+  const handleSubmit = async () => {
+    const err = validate();
+    if (err) { setError(err); return; }
+    setLoading(true); setError(""); setSuccess(false);
+    try {
+      const res = await fetch(`${BASE_URL}/admin/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": token },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || `Request failed (${res.status})`);
+      setSuccess(true);
+      setUsername(""); setPassword(""); setConfirmPw("");
+    } catch (e) {
+      setError(e.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div onClick={onClose} style={{
+        position: "fixed", inset: 0, background: "rgba(15,23,42,.45)",
+        backdropFilter: "blur(4px)", zIndex: 300, animation: "fadeIn .2s ease",
+      }} />
+      <div style={{
+        position: "fixed", top: "50%", left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: 301, width: "100%", maxWidth: 440, padding: "0 16px",
+        animation: "scaleIn .25s ease",
+      }}>
+        <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 24px 48px rgba(79,70,229,.18), 0 8px 16px rgba(0,0,0,.1)", overflow: "hidden" }}>
+          <div style={{ padding: "22px 28px 18px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "#0f172a" }}>Update Credentials</div>
+              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Change admin username and password</div>
+            </div>
+            <button onClick={onClose} style={{
+              width: 32, height: 32, borderRadius: 8,
+              border: "1.5px solid #e2e8f0", background: "#f8fafc",
+              fontSize: 14, cursor: "pointer", color: "#64748b",
+              display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "#ef4444"; e.currentTarget.style.color = "#ef4444"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#64748b"; }}
+            >✕</button>
+          </div>
+          <div style={{ padding: "24px 28px 28px" }}>
+            {success && (
+              <div style={{ padding: "14px 16px", borderRadius: 10, background: "#d1fae5", border: "1px solid #a7f3d0", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>✅</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#065f46" }}>Credentials updated!</div>
+                  <div style={{ fontSize: 12, color: "#047857", marginTop: 1 }}>Your new credentials are active immediately.</div>
+                </div>
+              </div>
+            )}
+            <CredField label="New Username" type="text" value={username} onChange={setUsername} placeholder="Enter new username" />
+            <CredField label="New Password" value={password} onChange={setPassword} placeholder="Min. 6 characters" show={showPw} onToggle={() => setShowPw(!showPw)} />
+            <CredField label="Confirm Password" value={confirmPw} onChange={v => { setConfirmPw(v); setError(""); }} placeholder="Re-enter password" show={showConfirm} onToggle={() => setShowConfirm(!showConfirm)} />
+            {password && confirmPw && (
+              <div style={{ fontSize: 12, fontWeight: 600, marginTop: -10, marginBottom: 14, color: password === confirmPw ? "#10b981" : "#ef4444" }}>
+                {password === confirmPw ? "✓ Passwords match" : "✗ Passwords don't match"}
+              </div>
+            )}
+            {error && (
+              <div style={{ padding: "10px 14px", borderRadius: 8, background: "#fee2e2", border: "1px solid #fecaca", fontSize: 13, color: "#dc2626", fontWeight: 500, marginBottom: 16 }}>
+                ⚠ {error}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={onClose} style={{
+                flex: 1, padding: "12px", border: "1.5px solid #e2e8f0", borderRadius: 10,
+                background: "#fff", fontSize: 14, fontWeight: 600, color: "#64748b", cursor: "pointer", transition: "all .15s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+              onMouseLeave={e => e.currentTarget.style.background = "#fff"}
+              >Cancel</button>
+              <button onClick={handleSubmit} disabled={loading} style={{
+                flex: 2, padding: "12px",
+                background: loading ? "#c7d2fe" : "linear-gradient(135deg,#4f46e5,#7c3aed)",
+                border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, color: "#fff",
+                cursor: loading ? "not-allowed" : "pointer", transition: "opacity .15s",
+                boxShadow: loading ? "none" : "0 4px 12px rgba(79,70,229,.3)",
+              }}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = ".88"; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+              >{loading ? "Updating…" : "Update Credentials"}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ── MAIN DASHBOARD ────────────────────────────────────────────────────────────
 export default function Dashboard({ token, selection, onBack, onLogout }) {
   const { branch, section } = selection;
@@ -182,6 +338,7 @@ export default function Dashboard({ token, selection, onBack, onLogout }) {
   const [lastRefresh, setLastRefresh] = useState("");
   const [activeTab,   setActiveTab]   = useState("overview");
   const [menuOpen,    setMenuOpen]    = useState(false);
+  const [showCreds,   setShowCreds]   = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true); setError("");
@@ -258,7 +415,7 @@ export default function Dashboard({ token, selection, onBack, onLogout }) {
           {/* DESKTOP TABS */}
           {!isMobile && (
             <div style={{ display: "flex", gap: 2, marginLeft: 8 }}>
-              {["overview", "subjects", "defaulters"].map(tab => (
+              {["overview", "subjects", "defaulters", "settings"].map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{
                   padding: "6px 14px", borderRadius: 8, border: "none",
                   fontSize: 13, fontWeight: 600,
@@ -697,6 +854,101 @@ export default function Dashboard({ token, selection, onBack, onLogout }) {
         )}
       </div>
 
+
+        {/* ═══════════════════ SETTINGS TAB ═══════════════════ */}
+        {!loading && !error && activeTab === "settings" && (
+          <div className="fade-in">
+            <SectionHeader title="Admin Settings" accent={COLORS.purple} />
+
+            {/* CREDENTIALS CARD */}
+            <div style={{
+              background: "#fff", borderRadius: 16, padding: "28px",
+              boxShadow: "0 1px 3px rgba(0,0,0,.08)", border: "1px solid #e2e8f0",
+              maxWidth: 520,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: "linear-gradient(135deg,#4f46e5,#7c3aed)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 20, flexShrink: 0,
+                }}>🔐</div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>Login Credentials</div>
+                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Update your admin username and password</div>
+                </div>
+              </div>
+
+              <div style={{ padding: "14px 16px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0", marginBottom: 20 }}>
+                <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.6 }}>
+                  For security, you will need to log in again with your new credentials after updating.
+                  Make sure to remember your new password before saving.
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowCreds(true)}
+                style={{
+                  padding: "12px 24px",
+                  background: "linear-gradient(135deg,#4f46e5,#7c3aed)",
+                  color: "#fff", border: "none", borderRadius: 10,
+                  fontSize: 14, fontWeight: 700, cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(79,70,229,.3)",
+                  transition: "opacity .15s, transform .15s",
+                  display: "flex", alignItems: "center", gap: 8,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = ".88"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = "1";   e.currentTarget.style.transform = "translateY(0)"; }}
+              >
+                🔑 Change Credentials
+              </button>
+            </div>
+
+            {/* SESSION INFO */}
+            <div style={{
+              background: "#fff", borderRadius: 16, padding: "28px",
+              boxShadow: "0 1px 3px rgba(0,0,0,.08)", border: "1px solid #e2e8f0",
+              maxWidth: 520, marginTop: 16,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: "linear-gradient(135deg,#f59e0b,#ef4444)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 20, flexShrink: 0,
+                }}>🚪</div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>Session</div>
+                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                    Viewing <b>{selection?.branch}-{selection?.section}</b> · {lastRefresh ? `Last refreshed ${lastRefresh}` : "Not yet refreshed"}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button onClick={onBack} style={{
+                  padding: "10px 20px", borderRadius: 10,
+                  border: "1.5px solid #e2e8f0", background: "#fff",
+                  fontSize: 13, fontWeight: 600, color: "#334155", cursor: "pointer", transition: "all .15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#4f46e5"; e.currentTarget.style.color = "#4f46e5"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.color = "#334155"; }}
+                >← Change Class</button>
+                <button onClick={onLogout} style={{
+                  padding: "10px 20px", borderRadius: 10,
+                  border: "1.5px solid #fecaca", background: "#fff5f5",
+                  fontSize: 13, fontWeight: 600, color: "#ef4444", cursor: "pointer", transition: "all .15s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = "#fee2e2"}
+                onMouseLeave={e => e.currentTarget.style.background = "#fff5f5"}
+                >Logout</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CHANGE CREDENTIALS MODAL */}
+        {showCreds && <ChangeCredentials token={token} onClose={() => setShowCreds(false)} />}
+
       {/* MOBILE BOTTOM NAV */}
       {isMobile && <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />}
 
@@ -705,7 +957,10 @@ export default function Dashboard({ token, selection, onBack, onLogout }) {
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes spin    { to { transform: rotate(360deg); } }
         @keyframes fadeUp  { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
+        @keyframes scaleIn { from { opacity:0; transform:translate(-50%,-48%) scale(.95); } to { opacity:1; transform:translate(-50%,-50%) scale(1); } }
         .fade-up  { animation: fadeUp .35s ease both; }
+        .fade-in  { animation: fadeIn .3s ease both; }
         * { box-sizing: border-box; }
       `}</style>
     </div>
