@@ -86,7 +86,7 @@ export default function SelectorPage({ onSelect, onLogout }) {
     <div style={s.page}>
       {/* topbar */}
       <div style={s.topbar}>
-        <div style={s.brand}>Attend<span style={s.brandAcc}>X</span></div>
+        <div style={s.brand}>Raghu<span style={s.brandAcc}></span></div>
         <button
           style={s.logoutBtn}
           onClick={onLogout}
