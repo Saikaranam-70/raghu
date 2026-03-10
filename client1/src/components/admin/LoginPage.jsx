@@ -1,5 +1,6 @@
 import { useState } from "react";
 import '../../pages/Login.css'
+import { useNavigate } from 'react-router-dom'
 
 // ── REPLACE THESE WITH YOUR ACTUAL ENDPOINTS ──────────────────────────────────
 const BASE_URL   = import.meta.env.VITE_API_URL;
@@ -94,6 +95,7 @@ const styles = {
 };
 
 export default function LoginPage({ onLogin }) {
+  const navigate = useNavigate()
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw]     = useState(false);
@@ -124,7 +126,7 @@ export default function LoginPage({ onLogin }) {
         <div className="admin-btn-wrap">
   <button 
     className="admin-btn"
-    onClick={() => navigate("/admin")}
+    onClick={() => navigate("/")}
   >
     <i className="bi bi-mortarboard"></i> Student
   </button>
